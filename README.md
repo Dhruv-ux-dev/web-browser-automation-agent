@@ -4,6 +4,25 @@ An interactive Streamlit application that accepts natural-language instructions 
 
 **Maintained and customized by Dhruv Mittal.** This repository adapts an existing browser-automation example; see [Acknowledgements](#acknowledgements) for source attribution.
 
+![Web Browser Agent app: a task typed into "Specify Actions", ready to run with Execute Command](docs/app-screenshot.png)
+
+## How it works
+
+```mermaid
+flowchart LR
+    U([You]) -->|plain-English task| UI[Streamlit app<br/>main.py]
+    UI --> A[mcp-agent<br/>browser_operator]
+    A <-->|decides next step| L[OpenAI model<br/>or Ollama]
+    A <-->|MCP tool calls| P[Playwright MCP server<br/>npx @playwright/mcp]
+    P <--> B[(Headless<br/>browser)]
+    A -->|Markdown summary| UI
+```
+
+1. You describe a task in the Streamlit app.
+2. The agent sends it to the language model along with the browser tools exposed by the Playwright MCP server (navigate, click, type, snapshot, screenshot, and more).
+3. The model chooses tools step by step; the agent runs each one in the browser and feeds the result back.
+4. When the task is done, the model writes a Markdown summary that appears under **Execution Summary**.
+
 ## Features
 
 - Natural-language instructions for browser tasks
@@ -90,6 +109,8 @@ web-browser-automation-agent/
 ├── mcp_agent.secrets.yaml.example   # Safe credentials template
 ├── requirements.txt                 # Python dependencies
 ├── .gitignore                       # Excludes secrets, logs, and local files
+├── docs/
+│   └── app-screenshot.png           # Screenshot used in this README
 └── README.md
 ```
 
@@ -97,6 +118,7 @@ web-browser-automation-agent/
 
 - **Authentication error:** set `OPENAI_API_KEY` or configure your local `mcp_agent.secrets.yaml`.
 - **`npx`/Playwright MCP does not start:** confirm Node.js and npm are installed and available on `PATH`; check your network access for the first package download.
+- **First run fails with "Failed to initialize … playwright":** the first launch can time out while `npx` downloads the Playwright MCP package. Run `npx -y @playwright/mcp@latest --help` once to pre-download it, then try again. If the browser itself is missing, run `npx playwright install chrome`.
 - **Python dependency conflicts:** use Python 3.10+ and install from `requirements.txt` in a fresh virtual environment. The requirements file caps the Python MCP SDK below version 2 because this app has not been migrated to the MCP SDK v2 API.
 
 ## Acknowledgements
